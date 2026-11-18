@@ -1,0 +1,6 @@
+.kokoro/
+.env
+.env.*
+data/
+*.zip
+__pycache__/

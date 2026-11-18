@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>See You Tomorrow</title>
+<script>
+if (location.protocol === 'file:') location.replace('http://127.0.0.1:3081/');
+</script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#14191a;color:#f5f1e8;font:15px Inter,"Microsoft YaHei",sans-serif}
+main{max-width:1400px;margin:auto;padding:clamp(18px,4vw,56px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:26px;color:#b9c8bf}
+h1{font:52px/1 "Instrument Serif",Georgia,serif;color:#f5f1e8;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,340px);gap:20px}
+section,aside{min-width:0;background:#1d2525;border:1px solid #34413d;border-radius:20px;overflow:hidden}
+video{display:block;width:100%;aspect-ratio:16/9;background:#101414}
+.controls{padding:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#scenes{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:8px;padding:0 18px 18px}
+button,input,select{font:inherit;border:1px solid #526359;border-radius:10px;padding:10px;color:inherit;background:#273531}
+button{cursor:pointer}button:hover{background:#384a42}
+button[aria-pressed=true],form button{background:#c9e6c8;color:#14211a;border-color:#c9e6c8}
+button:disabled{opacity:.5;cursor:default}
+aside{display:flex;flex-direction:column;padding:18px}
+h2{font-size:18px;margin:0}
+#messages{height:clamp(200px,32vw,420px);overflow:auto;display:flex;flex-direction:column;gap:12px;margin:16px 0;padding:0 4px}
+.message{margin:0;max-width:93%;padding:10px 12px;background:#293732;border-radius:13px;overflow-wrap:anywhere}
+.mine{align-self:flex-end;background:#c9e6c8;color:#14211a}
+.suggestions,form{display:flex;gap:8px;flex-wrap:wrap}
+form{flex-wrap:nowrap;margin-top:12px}input{width:100%;min-width:0}form button{white-space:nowrap}
+#caption{margin-left:auto;color:#c3d2c9}
+@media(max-width:820px){.layout{grid-template-columns:1fr}}
+
+body{background:radial-gradient(ellipse at 10% 0,#292032,transparent 55%),#15121c;color:#f7effb}
+main{max-width:1180px;padding:clamp(18px,4vw,48px)}
+h1{font:clamp(36px,6vw,64px)/1.05 "Instrument Serif",Georgia,serif}
+.layout{grid-template-columns:minmax(230px,330px) minmax(0,1fr);gap:16px}
+section,aside{background:#211b2c;border-color:#40344d;border-radius:22px}
+.portrait{display:flex;flex-direction:column}
+.portrait img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;object-position:center 35%}
+.portrait-info{padding:20px}.portrait-info h2{font:38px Georgia,serif;margin:0 0 14px}
+.portrait-info label{color:#c7afd9}.portrait-info p{overflow-wrap:anywhere;margin:6px 0 0}
+aside{padding:22px;gap:9px}
+button,input,select{background:#2e243b;border-color:#594568}
+button:hover{background:#49385d}
+button[aria-pressed=true],form button,.mine{background:#dec2ff;color:#251630;border-color:#dec2ff}
+.message:not(.mine){background:#362845}
+#messages{height:clamp(220px,32vh,390px);margin:6px 0}
+aside>button{align-self:flex-start}
+aside span:empty{display:none}
+@media(max-width:740px){.layout{grid-template-columns:1fr}.portrait{display:grid;grid-template-columns:110px 1fr}.portrait img{height:100%;max-height:155px}.portrait-info h2{font-size:30px}}
+
+.portrait-info details{margin-top:18px;border-top:1px solid #594568;padding-top:14px}
+summary{cursor:pointer;color:#ead9fa}
+#member-form{display:grid;gap:8px}
+#member-form label{display:grid;gap:4px}
+#member-form button{justify-self:start}
+#member-role{margin:-8px 0 18px;color:#c7afd9}
+#export-history{align-self:flex-start}
+.reply-audio{display:block;margin-top:8px;font-size:.82rem;padding:5px 10px}
+#members{display:flex;gap:8px;margin-bottom:14px}#members a{color:#f7effb;padding:8px 16px;border-radius:10px;background:#2e243b;text-decoration:none}#members a[aria-current]{background:#dec2ff;color:#251630}.member-initial{display:grid;place-items:center;min-height:130px;aspect-ratio:4/5;font:90px Georgia,serif;background:#503649;color:#efd2e3}#member-expression{width:100%;aspect-ratio:1;background:#503649 url(/member-expressions.png) no-repeat;background-size:400% 200%;transition:opacity .15s ease} @media(max-width:740px){#member-expression{align-self:start}}[hidden]{display:none!important}.portrait fieldset{margin:14px 0 6px;border:1px solid #594568;border-radius:8px}.portrait fieldset button{margin:4px}</style>
+</head>
+<body>
+<main>
+<header><h1>See You Tomorrow</h1><select id="language" aria-label="Language / 语言 / 言語"><option value="en">English</option><option value="zh-CN">简体中文</option><option value="ja">日本語</option></select></header>
+<nav id="members" aria-label="Family members"><a href="/">Mira</a><a href="/?member=nora">Nora</a><a href="/?member=room">Room</a></nav>
+<div class="layout">
+<section class="portrait" aria-label="Mira"><div id="member-expression" role="img"></div><div class="portrait-info"><h2 id="member-name">Mira</h2><p id="member-role"></p><label>下次聊</label><p id="saved-topic"></p><small id="disk-status" role="status"></small>
+<details><summary>成员设定</summary>
+<form id="member-form"><label><span>名字</span><input name="name" required maxlength="32"></label>
+<label><span>关系</span><input name="relationship" required maxlength="60"></label>
+<label><span>性格</span><input name="personality" required maxlength="240"></label>
+<label for="voice-choice">英文声音</label>
+<select id="voice-choice" name="voice"></select>
+<button id="voice-preview" type="button">试听</button>
+<button>保存成员</button><output id="member-status"></output></form></details></div></section>
+<aside>
+<h2>和 Mira 对话</h2>
+<button id="speech" type="button" aria-pressed="false">开启英文朗读</button>
+<span id="speech-status" role="status"></span>
+<button id="wake" type="button" aria-pressed="false">开启 Hey Mira 唤醒</button>
+<button id="live" type="button" aria-pressed="false">开始实时对话</button>
+<span id="wake-status" role="status"></span>
+<div id="messages" role="log" aria-label="对话记录"></div>
+<div class="suggestions"><button type="button">我回来了</button><button type="button">忘掉上次的事</button><button type="button">记住一件事</button></div>
+<form id="chat-form"><input aria-label="消息" placeholder="给 Mira 发消息" maxlength="300" required><button>发送</button></form>
+<button id="export-history" type="button">导出记录</button>
+</aside>
+</div>
+</main>
+<script type="module">
+const translations = {
+  "播放回复":["Play reply","播放回复","返信を再生"],
+  "浏览器阻止了自动播放，请点击播放回复。":["Couldn't autoplay. Click Play reply to hear Mira.","浏览器阻止了自动播放，请点击播放回复。","自動再生できませんでした。「返信を再生」を押してください。"],
+
+  "正在合成语音…":["Generating voice…","正在合成语音…","音声を生成中…"],
+  "Mira 正在说话":["Mira is speaking","Mira 正在说话","Mira が話しています"],
+  "正在连接麦克风…":["Opening microphone…","正在连接麦克风…","マイクに接続中…"],
+
+  "开始实时对话":["Start live conversation","开始实时对话","ライブ会話を開始"],
+  "结束实时对话":["End live conversation","结束实时对话","ライブ会話を終了"],
+  "正在听，请说英语":["Listening. Speak in English.","正在听，请说英语","英語で話してください"],
+  "Mira 正在回应…":["Mira is replying…","Mira 正在回应…","Mira が返答中…"],
+
+  "成员设定":["Member settings","成员设定","メンバー設定"],
+  "名字":["Name","名字","名前"],
+  "关系":["Relationship","关系","関係"],
+  "性格":["Personality","性格","性格"],
+  "保存成员":["Save member","保存成员","保存する"],
+  "已保存":["Saved","已保存","保存しました"],
+  "导出记录":["Export history","导出记录","履歴をエクスポート"],
+  "家人":["Family member","家人","家族"],
+
+"下次聊": ["For next time","下次聊","次に話すこと"],
+"暂无话题": ["No topic saved","暂无话题","保存した話題はありません"],
+"记住一件事": ["Remember a topic","记住一件事","話題を覚えて"],
+"What would you like me to ask about next time?": ["What would you like me to ask about next time?","下次想让我问起什么？","次に会ったとき、何を聞いてほしい？"],
+"Hi. Want to leave something for tomorrow?": ["Hi. Want to leave something for tomorrow?","嗨，想留一件事明天聊吗？","こんにちは。明日話したいことはある？"],
+"I can save a topic and check in about it when you come back.": ["I can save a topic and check in about it when you come back.","我可以记住一件事，等你回来再问你进展。","話題を覚えておいて、次に会ったときにその後を聞けるよ。"],
+  "忘掉上次的事": ["Forget last topic", "忘掉上次的事", "前回の話を忘れる"],
+  "Mira, ask me about one thing next time.": ["Mira, ask me about one thing next time.", "Mira，下次问我一件事。", "Mira、次にこの話を聞いてね。"],
+  "Hi. Want to leave something for tomorrow?": ["Hi. Want to leave something for tomorrow?", "回来啦。下次见面时，你想让我问起什么？", "おかえり。次に会ったとき、何の話を聞いてほしい？"],
+  "I’ll ask you about that next time.": ["I’ll ask you about that next time.", "好，下次见面我会问起这件事。", "わかった。次にその話を聞くね。"],
+  "I’ve cleared the last topic.": ["I’ve cleared the last topic.", "我已经清除了上次的话题。", "前回の話を消したよ。"],
+  "I’m glad to hear that. What went well?": ["I’m glad to hear that. What went well?", "太好了。哪一部分最顺利？", "それはよかった。何がうまくいった？"],
+  "Sounds like it was a rough one. What happened?": ["Sounds like it was a rough one. What happened?", "听起来不太顺利。发生什么了？", "大変だったみたいだね。何があったの？"],
+  "Thanks for telling me. Do you want me to ask about something else next time?": ["Thanks for telling me. Do you want me to ask about something else next time?", "谢谢你告诉我。下次要不要换件事聊？", "話してくれてありがとう。次は別のことを聞こうか？"],
+  "本地互动": [
+    "Local mode",
+    "本地互动",
+    "ローカルモード"
+  ],
+  "场景播放": [
+    "Scene playback",
+    "场景播放",
+    "シーン再生"
+  ],
+  "角色视频": [
+    "Character video",
+    "角色视频",
+    "キャラクター映像"
+  ],
+  "上一段": [
+    "Previous",
+    "上一段",
+    "前へ"
+  ],
+  "下一段": [
+    "Next",
+    "下一段",
+    "次へ"
+  ],
+  "每 5 分钟换场景": [
+    "Rotate every 5 min",
+    "每 5 分钟换场景",
+    "5分ごとに切り替え"
+  ],
+  "开启视频原声": [
+    "Unmute video",
+    "开启视频原声",
+    "動画の音声をオン"
+  ],
+  "关闭视频原声": [
+    "Mute video",
+    "关闭视频原声",
+    "動画の音声をオフ"
+  ],
+  "正在读取视频…": [
+    "Loading videos…",
+    "正在读取视频…",
+    "動画を読み込み中…"
+  ],
+  "选择场景": [
+    "Choose a scene",
+    "选择场景",
+    "シーン選択"
+  ],
+  "和 Mira 对话": [
+    "Talk to Mira",
+    "和 Mira 对话",
+    "Mira と話す"
+  ],
+  "开启英文朗读": [
+    "Turn on English narration",
+    "开启英文朗读",
+    "英語読み上げをオン"
+  ],
+  "关闭英文朗读": [
+    "Turn off English narration",
+    "关闭英文朗读",
+    "英語読み上げをオフ"
+  ],
+  "英文声音": [
+    "English voice",
+    "英文声音",
+    "英語の音声"
+  ],
+  "试听": [
+    "Preview voice",
+    "试听",
+    "試聴"
+  ],
+  "正在读取本机声音…": [
+    "Loading local voices…",
+    "正在读取本机声音…",
+    "端末の音声を読み込み中…"
+  ],
+  "未找到本机英文语音": [
+    "No local English voices",
+    "未找到本机英文语音",
+    "端末に英語音声がありません"
+  ],
+  "开启 Hey Mira 唤醒": [
+    "Enable “Hey Mira”",
+    "开启 Hey Mira 唤醒",
+    "「Hey Mira」を有効にする"
+  ],
+  "关闭语音唤醒": [
+    "Turn off wake word",
+    "关闭语音唤醒",
+    "ウェイクワードを無効にする"
+  ],
+  "对话记录": [
+    "Conversation",
+    "对话记录",
+    "会話履歴"
+  ],
+  "我回来了": [
+    "I’m back",
+    "我回来了",
+    "ただいま"
+  ],
+  "换个场景": [
+    "Change scene",
+    "换个场景",
+    "シーンを変える"
+  ],
+  "暂停画面": [
+    "Pause video",
+    "暂停画面",
+    "動画を一時停止"
+  ],
+  "消息": [
+    "Message",
+    "消息",
+    "メッセージ"
+  ],
+  "给 Mira 发消息": [
+    "Message Mira",
+    "给 Mira 发消息",
+    "Mira にメッセージ"
+  ],
+  "发送": [
+    "Send",
+    "发送",
+    "送信"
+  ],
+  "浏览器未找到本机英文语音，请在 Windows 设置中添加英文语音后刷新。": [
+    "Add an English voice in Windows Settings, then refresh.",
+    "浏览器未找到本机英文语音，请在 Windows 设置中添加英文语音后刷新。",
+    "Windows の設定で英語音声を追加し、再読み込みしてください。"
+  ],
+  "朗读失败，请检查 Windows 语音和浏览器声音。": [
+    "Speech playback failed. Check your Windows voice and browser volume.",
+    "朗读失败，请检查 Windows 语音和浏览器声音。",
+    "読み上げに失敗しました。Windows の音声設定とブラウザーの音量を確認してください。"
+  ],
+  "此浏览器不支持本机语音朗读。": [
+    "This browser does not support local narration.",
+    "此浏览器不支持本机语音朗读。",
+    "このブラウザーは端末での読み上げに対応していません。"
+  ],
+  "麦克风已关闭": [
+    "Microphone off",
+    "麦克风已关闭",
+    "マイクはオフです"
+  ],
+  "此浏览器不支持离线识别。请用支持本机识别的 Chrome 打开。": [
+    "Offline recognition is unavailable. Try Chrome with on-device recognition support.",
+    "此浏览器不支持离线识别。请用支持本机识别的 Chrome 打开。",
+    "オフライン認識に対応した Chrome で開いてください。"
+  ],
+  "此浏览器无法在本机识别。": [
+    "On-device recognition is unavailable.",
+    "此浏览器无法在本机识别。",
+    "端末での音声認識は利用できません。"
+  ],
+  "正在检查英文识别语言包…": [
+    "Checking the English recognition pack…",
+    "正在检查英文识别语言包…",
+    "英語認識パックを確認中…"
+  ],
+  "此浏览器无法安装本机英文识别语言包。": [
+    "The English recognition pack is unavailable.",
+    "此浏览器无法安装本机英文识别语言包。",
+    "英語認識パックを利用できません。"
+  ],
+  "正在安装英文识别语言包…": [
+    "Installing the English recognition pack…",
+    "正在安装英文识别语言包…",
+    "英語認識パックをインストール中…"
+  ],
+  "语言包安装失败，请重试。": [
+    "Language pack installation failed. Try again.",
+    "语言包安装失败，请重试。",
+    "言語パックのインストールに失敗しました。再試行してください。"
+  ],
+  "Mira 在听，请在 8 秒内说出指令。": [
+    "Mira is listening. Say a command within 8 seconds.",
+    "Mira 在听，请在 8 秒内说出指令。",
+    "8秒以内に指示を話してください。"
+  ],
+  "正在等待「Hey Mira」": [
+    "Listening for “Hey Mira”",
+    "正在等待「Hey Mira」",
+    "「Hey Mira」を待っています"
+  ],
+  "请允许此页面使用麦克风。": [
+    "Allow microphone access for this page.",
+    "请允许此页面使用麦克风。",
+    "このページのマイク使用を許可してください。"
+  ],
+  "麦克风连接中断，请重新开启。": [
+    "Microphone disconnected. Enable it again.",
+    "麦克风连接中断，请重新开启。",
+    "マイクの接続が切れました。再度有効にしてください。"
+  ],
+  "试说「Hey Mira, I am back」": [
+    "Try “Hey Mira, I am back”",
+    "试说「Hey Mira, I am back」",
+    "「Hey Mira, I am back」と話してください"
+  ],
+  "视频无法播放": [
+    "Video playback failed",
+    "视频无法播放",
+    "動画を再生できません"
+  ],
+  "未找到 MP4": [
+    "No MP4 videos found",
+    "未找到 MP4",
+    "MP4 動画が見つかりません"
+  ],
+  "无法读取本地视频列表": [
+    "Could not load the local videos",
+    "无法读取本地视频列表",
+    "ローカル動画の一覧を読み込めません"
+  ],
+  "Sure. I will change the scene every five minutes.": [
+    "Sure. I will change the scene every five minutes.",
+    "好，我每五分钟换一次场景。",
+    "わかった。5分ごとにシーンを変えるね。"
+  ],
+  "Sure. Let us stay here for now.": [
+    "Sure. Let us stay here for now.",
+    "好，我们先留在这里。",
+    "しばらくここにいようね。"
+  ],
+  "There are no scenes to play yet.": [
+    "There are no scenes to play yet.",
+    "还没有可播放的场景。",
+    "まだ再生できるシーンがないよ。"
+  ],
+  "Paused. Let me know when you want to keep watching.": [
+    "Paused. Let me know when you want to keep watching.",
+    "暂停了。想继续时告诉我。",
+    "一時停止したよ。続きを見たくなったら教えてね。"
+  ],
+  "I could not play this scene.": [
+    "I could not play this scene.",
+    "这个场景无法播放。",
+    "このシーンを再生できなかったよ。"
+  ],
+  "Playing this scene again.": [
+    "Playing this scene again.",
+    "继续播放这个场景。",
+    "続きを再生するね。"
+  ],
+  "No scenes have loaded yet.": [
+    "No scenes have loaded yet.",
+    "还没有载入场景。",
+    "まだシーンが読み込まれていないよ。"
+  ],
+  "Welcome back. Want to stay here a while or change the scene?": [
+    "Welcome back. Want to stay here a while or change the scene?",
+    "欢迎回来。想在这里待一会儿，还是换个场景？",
+    "おかえり。ここで少し過ごす？ それともシーンを変える？"
+  ],
+  "Hi, I am Mira. Which scene would you like to see?": [
+    "Hi, I am Mira. Which scene would you like to see?",
+    "嗨，我是 Mira。想看哪个场景？",
+    "こんにちは、Mira です。どのシーンが見たい？"
+  ]
+};
+const language = document.querySelector('#language');
+const locales = ['en', 'zh-CN', 'ja'];
+const labels = new Map();
+let locale = localStorage.getItem('tomorrow.locale');
+if (!locales.includes(locale)) locale = 'en';
+
+const selectedMember = new URLSearchParams(location.search).get('member');
+const memberId = ['nora','room'].includes(selectedMember) ? selectedMember : 'mira';
+const inRoom = memberId === 'room';
+const memberKey = key => memberId === 'mira' ? key : key + '.' + memberId;
+const topicStorageKey = memberKey('tomorrow.returnTopic');
+let awaitingTopic = false;
+
+
+function translate(text) {
+  const recalled = /^Welcome home\. How did this go\? (.+)$/s.exec(text);
+  if (recalled) return {
+    en: 'Welcome home. How did this go? ',
+    'zh-CN': '回来啦。上次你提到这件事，后来怎么样了？',
+    ja: 'おかえり。前に話してくれたこと、その後どうだった？ '
+  }[locale] + recalled[1];
+  const choice = locales.indexOf(locale);
+  const scene = /^场景 (.+)$/.exec(text);
+  if (scene) return ['Scene ', '场景 ', 'シーン '][choice] + scene[1];
+  const switched = /^Sure\. Switching to scene (\d+)\.$/.exec(text);
+  if (switched) return ['Sure. Switching to scene $1.', '好，切到场景 $1。', 'シーン $1 に切り替えるね。'][choice].replace('$1', switched[1]);
+  const range = /^You can choose a scene from 1 to (\d+)\.$/.exec(text);
+  if (range) return ['You can choose a scene from 1 to $1.', '可以选 1 到 $1 号场景。', '1 から $1 のシーンを選べるよ。'][choice].replace('$1', range[1]);
+  const error = /^本机语音识别已停止（(.+)）。$/.exec(text);
+  if (error) return ['On-device recognition stopped ($1).', '本机语音识别已停止（$1）。', '端末での音声認識が停止しました（$1）。'][choice].replace('$1', error[1]);
+  const translated = translations[text]?.[choice];
+  return translated ? translated.replaceAll("Mira", document.querySelector("#member-name").textContent) : text;
+}
+
+function label(element, text) {
+  labels.set(element, text);
+  element.textContent = translate(text);
+}
+
+const attributes = [];
+for (const element of document.querySelectorAll('header span, h2, button, label:not(:has(input)), #member-form label span, summary, #voice-choice option, #caption')) {
+  if (element.id === 'language') continue;
+  if (element.closest('.suggestions') && element.tagName === 'BUTTON') element.dataset.command = element.textContent;
+  label(element, element.textContent);
+}
+for (const element of document.querySelectorAll('[aria-label], [placeholder]')) {
+  for (const name of ['aria-label', 'placeholder']) {
+    if (element.hasAttribute(name)) attributes.push([element, name, element.getAttribute(name)]);
+  }
+}
+
+function renderLanguage() {
+  document.documentElement.lang = language.value = locale;
+  document.title = 'See You Tomorrow';
+  for (const [element, text] of labels) element.textContent = translate(text);
+  for (const [element, name, text] of attributes) element.setAttribute(name, translate(text));
+}
+language.onchange = () => {
+  locale = language.value;
+  localStorage.setItem('tomorrow.locale', locale);
+  renderLanguage();
+  refreshVoices();
+};
+renderLanguage();
+
+
+const messages = document.querySelector('#messages');
+const input = document.querySelector('#chat-form input');
+const speech = document.querySelector('#speech');
+const speechStatus = document.querySelector('#speech-status');
+
+let speakingEnabled = localStorage.getItem('tomorrow.narration') !== 'off';
+
+
+const voiceChoice = document.querySelector('#voice-choice');
+const voicePreview = document.querySelector('#voice-preview');
+const voiceKey = 'tomorrow.kokoroVoice';
+const voices = ['af_sky', 'af_heart', 'af_bella', 'af_nova', 'af_nicole', 'af_jessica', 'bf_alice', 'bf_emma', 'bf_isabella'];
+const player = new Audio();
+let audioContext;
+let activeSource;
+let playbackVersion = 0;
+let replyQueue = Promise.resolve();
+let queuedReplies = 0;
+let queueVersion = 0;
+
+function unlockAudio() {
+  try {
+    if (!window.AudioContext) return;
+    audioContext ??= new AudioContext();
+    if (audioContext.state !== "running") void audioContext.resume().catch(() => {});
+  } catch { /* HTML audio remains available. */ }
+}
+
+function isPlaying() {
+  return Boolean(activeSource) || !player.paused;
+}
+let speechRequest;
+let audioUrl;
+
+function refreshVoices() {
+  const selected = voiceChoice.value;
+  voiceChoice.replaceChildren(...voices.map(voice => new Option(voice, voice)));
+  voiceChoice.value = voices.includes(selected) ? selected : member.voice;
+}
+
+function stopSpeech() {
+  playbackVersion++;
+  if (activeSource) {
+    activeSource.onended = null;
+    activeSource.stop();
+    activeSource.disconnect();
+    activeSource = undefined;
+  }
+  speechRequest?.abort();
+  speechRequest = undefined;
+  player.pause();
+  player.removeAttribute('src');
+  if (audioUrl) URL.revokeObjectURL(audioUrl);
+  audioUrl = undefined;
+}
+player.onended = () => {
+  stopSpeech();
+  label(speechStatus, '');
+};
+player.onerror = () => label(speechStatus, 'Audio playback failed. Try Preview voice.');
+voicePreview.onclick = () => {
+  unlockAudio();
+  return readReply('Hi, I am ' + member.name + '. How does this voice sound?', true);
+};
+
+function cancelQueuedReplies() {
+  queueVersion++;
+}
+
+function queueReply(text, bubble, speaker = member, mood = 'neutral') {
+  if (!speakingEnabled && !liveMode) {
+    showExpression(mood, speaker);
+    return;
+  }
+  const delivery = {speaker:{...speaker}, mood};
+  const version = queueVersion;
+  queuedReplies++;
+  replyQueue = replyQueue.then(async () => {
+    while (version === queueVersion && (isPlaying() || speechRequest)) {
+      await new Promise(resolve => setTimeout(resolve, 75));
+    }
+    if (version === queueVersion) await readReply(text, false, bubble, delivery);
+  }).catch(error => label(speechStatus, error.message)).finally(() => { queuedReplies--; });
+}
+
+function speechText(text) {
+  return text
+    .replace(/\[\s*(?:mood\s*:\s*)?(?:neutral|happy|concerned|upset|sad|angry|excited)\s*\]|<(?:neutral|happy|concerned|upset|sad|angry|excited)>/gi, '')
+    .replace(/\b(?:smiling face with smiling eyes|grinning face with smiling eyes|face with tears of joy|slightly smiling face)\b/gi, '')
+    .replace(/\p{RGI_Emoji}/gv, '')
+    .replace(/\p{Extended_Pictographic}|\p{Emoji_Modifier}|[\uFE0E\uFE0F\u200D]/gu, '')
+    .replace(/\s+([,.!?;:])/g, '$1')
+    .trim();
+}
+
+async function readReply(text, preview = false, bubble, delivery = {speaker:member, mood:'neutral'}) {
+  if (!speakingEnabled && !preview && !liveMode) return;
+  text = speechText(text);
+  if (!text) {
+    if (bubble) showExpression(delivery.mood, delivery.speaker);
+    return;
+  }
+  stopSpeech();
+  const current = new AbortController();
+  speechRequest = current;
+  try {
+    if (/[\u3040-\u30ff\u3400-\u9fff]/.test(text)) {
+      label(speechStatus, 'Kokoro preview currently supports English replies.');
+      return;
+    }
+    label(speechStatus, '正在合成语音…');
+    const response = await fetch('/speech', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:text.slice(0, 1200), voice:preview ? voiceChoice.value : delivery.speaker.voice}), signal:current.signal
+    });
+    if (!response.ok) throw Error(await response.text());
+    const audio = await response.blob();
+    if (current.signal.aborted) return;
+    if (bubble) {
+      const replay = document.createElement('button');
+      replay.type = 'button';
+      replay.className = 'reply-audio';
+      label(replay, '播放回复');
+      replay.onclick = () => {
+        unlockAudio();
+        stopSpeech();
+        void playAudio(audio, delivery).catch(error => label(speechStatus, error.message));
+      };
+      bubble.after(replay);
+      messages.scrollTop = messages.scrollHeight;
+    }
+    await playAudio(audio, delivery);
+  } catch (error) {
+    if (!current.signal.aborted) label(speechStatus, error.name === 'NotAllowedError' && bubble ? '浏览器阻止了自动播放，请点击播放回复。' : error.message);
+  } finally {
+    if (speechRequest === current) speechRequest = undefined;
+  }
+}
+
+async function playAudio(audio, {speaker, mood}) {
+  const version = playbackVersion;
+  const showSpeaker = () => {
+    if (version !== playbackVersion) return;
+    showExpression(mood, speaker);
+    label(speechStatus, speaker.name + ' is speaking.');
+  };
+  if (audioContext?.state === 'running') {
+    const buffer = await audioContext.decodeAudioData(await audio.arrayBuffer());
+    if (version !== playbackVersion) return;
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.onended = () => {
+      source.disconnect();
+      if (activeSource !== source) return;
+      activeSource = undefined;
+      label(speechStatus, '');
+    };
+    source.start();
+    activeSource = source;
+    showSpeaker();
+    return;
+  }
+  audioUrl = URL.createObjectURL(audio);
+  player.src = audioUrl;
+  await player.play();
+  showSpeaker();
+}
+
+speech.disabled = false;
+function renderNarration() {
+  speech.setAttribute('aria-pressed', String(speakingEnabled));
+  label(speech, speakingEnabled ? '关闭英文朗读' : '开启英文朗读');
+}
+renderNarration();
+speech.onclick = () => {
+  speakingEnabled = !speakingEnabled;
+  localStorage.setItem('tomorrow.narration', speakingEnabled ? 'on' : 'off');
+  renderNarration();
+  if (speakingEnabled) {
+    unlockAudio();
+    readReply('Hi, I am ' + member.name + '. You can hear my replies now.');
+  }
+  else {
+    cancelQueuedReplies();
+    stopSpeech();
+    label(speechStatus, '');
+  }
+};
+window.addEventListener('pagehide', stopSpeech);
+
+
+
+
+const memberForm = document.querySelector('#member-form');
+const profileKey = memberKey('tomorrow.member');
+const historyKey = memberKey('tomorrow.familyHistory');
+function load(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+  catch { return fallback; }
+}
+let diskMember;
+try {
+  const response = await fetch('/members/' + memberId, {signal:AbortSignal.timeout(3000)});
+  if (!response.ok) throw Error('Member folder unavailable');
+  diskMember = await response.json();
+} catch {
+  document.querySelector('#disk-status').textContent = 'Member folder unavailable';
+}
+if (diskMember?.resetId && localStorage.getItem(memberKey('tomorrow.resetId')) !== diskMember.resetId) {
+  localStorage.removeItem(historyKey);
+  localStorage.removeItem(topicStorageKey);
+  localStorage.setItem(memberKey('tomorrow.resetId'), diskMember.resetId);
+}
+let member = load(profileKey, diskMember?.profile ?? ( memberId === 'nora' ? {name:'Nora',relationship:'家人',personality:'Energetic, direct, and curious. Offer one practical next step.',voice:'af_heart'} : {name:'Mira', relationship:'家人', personality:'Warm, attentive, and practical. Ask one specific follow-up when it fits.'}));
+function updateMiraVoice(profile) {
+  if (profile.voiceRevision === 1) return profile;
+  return {...profile, voice:profile.voice && profile.voice !== 'bf_alice' ? profile.voice : 'af_sky', voiceRevision:1};
+}
+const previousVoice = localStorage.getItem(voiceKey);
+if (!voices.includes(member.voice)) {
+  member.voice = voices.includes(previousVoice) ? previousVoice : 'bf_alice';
+}
+if (memberId === 'mira') {
+  member = updateMiraVoice(member);
+}
+const history = load(historyKey, diskMember?.history ?? []);
+if (!localStorage.getItem(profileKey) && !localStorage.getItem(historyKey) && diskMember?.topic) {
+  localStorage.setItem(topicStorageKey, diskMember.topic);
+}
+if (memberId === 'mira') localStorage.setItem(profileKey, JSON.stringify(member));
+let diskQueue = Promise.resolve();
+function saveMember() {
+  const body = JSON.stringify({profile:member, history, topic:localStorage.getItem(topicStorageKey), resetId:diskMember?.resetId});
+  diskQueue = diskQueue.then(async () => {
+    const response = await fetch('/members/' + memberId, {
+      method:'PUT', headers:{'Content-Type':'application/json'}, body, keepalive: body.length < 16000
+    });
+    if (response.status === 409) {
+      document.querySelector('#disk-status').textContent = 'History was cleared. Refresh this tab.';
+      return;
+    }
+    if (!response.ok) throw Error('Member folder write failed.');
+    document.querySelector('#disk-status').textContent = 'Saved to member folder';
+  }).catch(() => {
+    document.querySelector('#disk-status').textContent = 'Folder save failed. Browser copy retained.';
+  });
+}
+
+const memberLinks = document.querySelectorAll("#members a");
+memberLinks[0].textContent = load("tomorrow.member", {}) .name || "Mira";
+memberLinks[1].textContent = load("tomorrow.member.nora", {}).name || "Nora";
+const activeLink = memberLinks[inRoom ? 2 : memberId === "nora" ? 1 : 0];
+activeLink.setAttribute("aria-current", "page");
+const portrait = document.querySelector(".portrait");
+const expression = document.querySelector('#member-expression');
+const guests = [];
+const roomProfiles = inRoom ? await Promise.all(['mira','nora'].map(async id => {
+  const stored = load(id === 'mira' ? 'tomorrow.member' : 'tomorrow.member.nora', null);
+  let saved;
+  try {
+    const response = await fetch('/members/' + id, {signal:AbortSignal.timeout(2500)});
+    if (response.ok) saved = (await response.json())?.profile;
+  } catch {}
+  const fallback = id === 'mira'
+    ? {name:'Mira',personality:'Warm, attentive, and practical.',voice:'bf_alice'}
+    : {name:'Nora',personality:'Energetic, direct, and curious.',voice:'af_heart'};
+  const profile = {...fallback, ...saved, ...stored, id};
+  return id === 'mira' ? updateMiraVoice(profile) : profile;
+})) : [];
+const expressions = ['neutral','happy','concerned','upset'];
+function showExpression(mood, speaker = member) {
+  const column = Math.max(0, expressions.indexOf(mood));
+  expression.style.backgroundPosition = (column * 100 / 3) + '% ' + ((speaker.id || memberId) === 'nora' ? '100%' : '0%');
+  expression.setAttribute('aria-label', speaker.name + ', ' + expressions[column] + ' expression');
+  if (inRoom) document.querySelector('#member-name').textContent = speaker.name;
+}
+function renderMember() {
+  const name = document.querySelector('#member-name');
+  labels.delete(name);
+  name.textContent = activeLink.textContent = member.name;
+  portrait.setAttribute("aria-label", member.name);
+  showExpression('neutral');
+  label(document.querySelector("aside h2"), "和 Mira 对话");
+  renderLanguage();
+  label(document.querySelector('#member-role'), member.relationship);
+  refreshVoices();
+  for (const key of ['name','relationship','personality','voice']) memberForm.elements.namedItem(key).value = member[key];
+}
+memberForm.onsubmit = event => {
+  event.preventDefault();
+  const fields = new FormData(memberForm);
+  const updated = Object.fromEntries([...fields].map(([key,value]) => [key,value.trim()]));
+  if (Object.values(updated).some(value => !value)) return;
+  if (memberId === 'mira') updated.voiceRevision = 1;
+  localStorage.setItem(profileKey, JSON.stringify(updated));
+  member = updated;
+  renderMember();
+  label(document.querySelector('#member-status'), '已保存');
+  saveMember();
+};
+function record(role, text, speaker = member) {
+  history.push({speaker:role === 'user' ? 'User' : speaker.name, role, scene:inRoom ? 'room' : 'private', text, createdAt:new Date().toISOString()});
+  localStorage.setItem(historyKey, JSON.stringify(history));
+  saveMember();
+}
+document.querySelector('#export-history').onclick = () => {
+  const url = URL.createObjectURL(new Blob([JSON.stringify({member, messages:history}, null, 2)], {type:'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'see-you-tomorrow-history.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+if (inRoom) {
+  member.name = 'Room';
+  activeLink.textContent = 'Room';
+  portrait.setAttribute('aria-label', 'Room');
+  document.querySelector('#member-name').textContent = 'Room';
+  document.querySelector('#saved-topic').previousElementSibling.hidden = true;
+  memberForm.closest('details').hidden = true;
+  document.querySelector('aside h2').textContent = 'Room chat';
+  labels.delete(document.querySelector('aside h2'));
+  document.querySelector('form input[name="name"]').disabled = true;
+  document.querySelector('#wake').hidden = true;
+  document.querySelector('.suggestions:has([data-command])')?.setAttribute('hidden','');
+  expression.hidden = true;
+  document.querySelector('#saved-topic').hidden = true;
+  document.querySelector('#chat-form input').placeholder = 'Message the room';
+  const invites = document.createElement('fieldset');
+  const title = document.createElement('legend');
+  title.textContent = 'Invite members';
+  invites.append(title);
+  const state = document.createElement('p');
+  state.textContent = 'The room is empty.';
+  for (const profile of roomProfiles) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Invite ' + profile.name;
+    button.onclick = () => {
+      const index = guests.indexOf(profile);
+      if (index === -1) {
+        guests.push(profile);
+        button.textContent = 'Remove ' + profile.name;
+      } else {
+        guests.splice(index, 1);
+        button.textContent = 'Invite ' + profile.name;
+      }
+      state.textContent = guests.length ? 'In the room: ' + guests.map(guest => guest.name).join(', ') : 'The room is empty.';
+      expression.hidden = !guests.length;
+      if (!guests.length) document.querySelector('#member-name').textContent = 'Room';
+      else if (!isPlaying()) showExpression('neutral', guests[0]);
+    };
+    invites.append(button);
+  }
+  portrait.querySelector('.portrait-info').append(invites, state);
+} else renderMember();
+
+function say(text, mine = false, raw = false) {
+  const bubble = document.createElement('p');
+  bubble.className = mine ? 'message mine' : 'message';
+  if (mine || raw) bubble.textContent = text; else label(bubble, text);
+  messages.append(bubble);
+  messages.scrollTop = messages.scrollHeight;
+  return bubble;
+}
+
+
+function renderTopic() {
+  const topic = localStorage.getItem(topicStorageKey);
+  const field = document.querySelector('#saved-topic');
+  if (topic) {
+    labels.delete(field);
+    field.textContent = topic;
+  } else label(field, '暂无话题');
+}
+
+function reply(text) {
+  text = text.trim();
+  if (/^(?:remember a topic|记住一件事|話題を覚えて)[.!。]?$/i.test(text)) {
+    awaitingTopic = true;
+    return 'What would you like me to ask about next time?';
+  }
+  if (/^(?:hi|hello|i.m back|i am back)[.!]?$/i.test(text)) text = '我回来了';
+  if (/^(?:forget last topic|忘掉上次的事|前回の話を忘れる)[.!。]?$/i.test(text.trim())) {
+    localStorage.removeItem(topicStorageKey);
+    awaitingTopic = false;
+    return 'I’ve cleared the last topic.';
+  }
+  if (/^(?:回来啦|我回来了|到家了|到家|你好|嗨|ただいま|remember this)[.!。！]?$/i.test(text.trim())) {
+    const topic = localStorage.getItem(topicStorageKey);
+
+    awaitingTopic = false;
+    return topic ? 'Welcome home. How did this go? ' + topic : 'Hi. Want to leave something for tomorrow?';
+  }
+  if (awaitingTopic || /^(?:remember |记住|覚えて[:：]?)\s*\S/i.test(text)) {
+    const topic = text.trim().replace(/^(?:remember |记住[:：]?|覚えて[:：]?)\s*/i, '').trim().slice(0, 160);
+    if (!topic) return 'Hi. Want to leave something for tomorrow?';
+    localStorage.setItem(topicStorageKey, topic);
+    awaitingTopic = false;
+    return 'I’ll ask you about that next time.';
+  }
+  return null;
+}
+
+
+const turns = [];
+let pendingTurns = 0;
+let releasingModels = false;
+let conversationQueue = Promise.resolve();
+
+function converse(text) {
+  text = text.trim();
+  if (!text || releasingModels) return conversationQueue;
+  if (inRoom && !guests.length) {
+    label(speechStatus, 'Invite at least one member before chatting.');
+    return conversationQueue;
+  }
+  const invited = [...guests];
+  const userBubble = say(text, true);
+  record('user', text);
+  pendingTurns++;
+  conversationQueue = conversationQueue.then(() => inRoom ? roomTurn(text, userBubble, invited) : answerTurn(text, userBubble))
+    .catch(error => label(speechStatus, error.message))
+    .finally(() => { pendingTurns--; });
+  return conversationQueue;
+}
+
+async function roomTurn(text, anchor, invited) {
+  let previous;
+  for (const speaker of invited) {
+    const result = await answerTurn(text, anchor, speaker, previous, invited);
+    anchor = result.bubble;
+    if (result.answer) previous = {name:speaker.name, text:result.answer};
+  }
+}
+
+function parseReply(raw, name, complete = false) {
+  let text = raw.trimStart();
+  let mood = 'neutral';
+  const prefix = name.toLowerCase() + ':';
+  while (text) {
+    const lower = text.toLowerCase();
+    if (lower.startsWith(prefix)) {
+      text = text.slice(prefix.length).trimStart();
+      continue;
+    }
+    const tag = /^\[(neutral|happy|concerned|upset)\]\s*/i.exec(text);
+    if (tag) {
+      mood = tag[1].toLowerCase();
+      text = text.slice(tag[0].length).trimStart();
+      continue;
+    }
+    if (!complete && (prefix.startsWith(lower) || (text.startsWith('[') && !text.includes(']') && text.length < 16))) text = '';
+    break;
+  }
+  return {text, mood};
+}
+
+async function answerTurn(text, userBubble, speaker = member, previous, invited = []) {
+  const action = inRoom ? null : reply(text);
+  renderTopic();
+  if (action) {
+    const actionMood = action.startsWith('Welcome home.') || action.startsWith('Hi.') ? 'happy' : 'neutral';
+    const actionBubble = say(action);
+    userBubble.after(actionBubble);
+    record('assistant', action);
+    if (!releasingModels) queueReply(action.startsWith('Welcome home. How did this go? ')
+      ? 'Welcome home. How did the thing you mentioned last time go?' : action, actionBubble, member, actionMood);
+    return;
+  }
+
+  const bubble = say('…');
+  userBubble.after(bubble);
+  labels.delete(bubble);
+  let answer = '';
+  let rawReply = '';
+  let mood = 'neutral';
+  try {
+    const user = {role:'user', content:text};
+    const room = inRoom ? {participants:invited.map(guest => guest.name), previous} : undefined;
+    const response = await fetch('/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ turns: [...turns.slice(-10), user], member:speaker, room, topic: localStorage.getItem(topicStorageKey) })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    let pending = '';
+    let complete = false;
+    for await (const chunk of response.body.pipeThrough(new TextDecoderStream())) {
+      pending += chunk;
+      const lines = pending.split('\n');
+      pending = lines.pop();
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const item = JSON.parse(line);
+        if (item.error) throw new Error('Ollama could not generate a reply.');
+        complete ||= item.done === true;
+        rawReply += item.message?.content || '';
+        const parsed = parseReply(rawReply, speaker.name, complete);
+        answer = parsed.text;
+        mood = parsed.mood;
+        bubble.textContent = (inRoom ? speaker.name + ': ' : '') + (answer || '…');
+        messages.scrollTop = messages.scrollHeight;
+      }
+    }
+    if (!answer || !complete) throw new Error('The local model did not finish its reply.');
+    turns.push(user, { role: 'assistant', content: ((inRoom ? speaker.name + ': ' : '') + answer).slice(0, 2000) });
+    if (turns.length > 12) turns.splice(0, 2);
+    answer = answer.trim();
+    bubble.textContent = (inRoom ? speaker.name + ': ' : '') + answer;
+    record('assistant', answer, speaker);
+    if (!releasingModels) queueReply(answer, bubble, speaker, mood);
+    return {bubble, answer};
+  } catch (error) {
+    bubble.textContent = answer ? answer + '\n' + error.message : error.message;
+    return {bubble};
+  }
+}
+
+const wake = document.querySelector('#wake');
+const live = document.querySelector('#live');
+let liveMode = false;
+const wakeStatus = document.querySelector('#wake-status');
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const languageOptions = { langs: ['en-US'], processLocally: true };
+let listener;
+
+function stopListening(message) {
+  const current = listener;
+  listener = undefined;
+  if (liveMode) { cancelQueuedReplies(); stopSpeech(); }
+  liveMode = false;
+  live.setAttribute('aria-pressed', 'false');
+  label(live, '开始实时对话');
+  current?.abort();
+  wake.setAttribute('aria-pressed', 'false');
+  label(wake, '开启 Hey Mira 唤醒');
+  label(wakeStatus, message);
+}
+
+async function startListening(handsFree) {
+  if (listener) {
+    const sameMode = handsFree === liveMode;
+    stopListening('麦克风已关闭');
+    if (sameMode) return;
+  }
+  wake.disabled = live.disabled = true;
+  try {
+    if (!Recognition?.available || !Recognition?.install) {
+      label(wakeStatus, '此浏览器不支持离线识别。请用支持本机识别的 Chrome 打开。');
+      return;
+    }
+    const recognizer = new Recognition();
+    if (!('processLocally' in recognizer)) throw new Error('此浏览器无法在本机识别。');
+    label(wakeStatus, '正在检查英文识别语言包…');
+    const availability = await Recognition.available(languageOptions);
+    if (availability !== 'available') {
+      if (availability === 'unavailable') throw new Error('此浏览器无法安装本机英文识别语言包。');
+      label(wakeStatus, '正在安装英文识别语言包…');
+      if (!await Recognition.install(languageOptions)) throw new Error('语言包安装失败，请重试。');
+    }
+    recognizer.lang = 'en-US';
+    recognizer.processLocally = true;
+    recognizer.continuous = !handsFree;
+    let responding = false;
+    let awakeUntil = 0;
+    recognizer.onresult = async event => {
+      if (listener !== recognizer || queuedReplies || isPlaying()) return;
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (!event.results[i].isFinal) continue;
+        const text = event.results[i][0].transcript.trim();
+        if (handsFree) {
+          if (!text || responding) return;
+          responding = true;
+          label(wakeStatus, 'Mira 正在回应…');
+          try { await converse(text); }
+          finally { responding = false; }
+          return;
+        }
+        const phrase = (memberId === "nora" ? /^hey[\s,]+nora\b[\s,.!?:]*/i : /^hey[\s,]+(?:mira|meera)\b[\s,.!?:]*/i).exec(text);
+        if (!phrase && Date.now() >= awakeUntil) continue;
+        const command = phrase ? text.slice(phrase[0].length).trim() : text;
+        if (!command) {
+          awakeUntil = Date.now() + 8000;
+          label(wakeStatus, 'Mira 在听，请在 8 秒内说出指令。');
+          continue;
+        }
+        awakeUntil = 0;
+        label(wakeStatus, '正在等待「Hey Mira」');
+        converse(command);
+      }
+    };
+    recognizer.onaudiostart = () => {
+      if (listener === recognizer && handsFree) label(wakeStatus, '正在听，请说英语');
+    };
+    recognizer.onerror = event => {
+      if (listener === recognizer && event.error !== 'no-speech') {
+        stopListening(['not-allowed','service-not-allowed'].includes(event.error)
+          ? '请允许此页面使用麦克风。'
+          : '本机语音识别已停止（' + event.error + '）。');
+      }
+    };
+    recognizer.onend = () => {
+      if (listener !== recognizer) return;
+      const resume = () => {
+        if (listener !== recognizer) return;
+        if (handsFree && (responding || pendingTurns || queuedReplies || speechRequest || isPlaying())) {
+          setTimeout(resume, 200);
+          return;
+        }
+        try {
+          recognizer.start();
+          if (handsFree) label(wakeStatus, '正在连接麦克风…');
+        } catch { stopListening('麦克风连接中断，请重新开启。'); }
+      };
+      setTimeout(resume, 300);
+    };
+    listener = recognizer;
+    liveMode = handsFree;
+    recognizer.start();
+    const activeButton = handsFree ? live : wake;
+    activeButton.setAttribute('aria-pressed', 'true');
+    label(activeButton, handsFree ? '结束实时对话' : '关闭语音唤醒');
+    label(wakeStatus, handsFree ? '正在连接麦克风…' : '试说「Hey Mira, I am back」');
+  } catch (error) {
+    stopListening(error.message);
+  } finally {
+    wake.disabled = live.disabled = false;
+  }
+}
+wake.onclick = () => { unlockAudio(); return startListening(false); };
+live.onclick = async () => {
+  if (!liveMode) {
+    unlockAudio();
+    return startListening(true);
+  }
+  releasingModels = true;
+  stopListening('麦克风已关闭');
+  live.disabled = wake.disabled = speech.disabled = voicePreview.disabled = true;
+  const submit = document.querySelector('#chat-form button');
+  submit.disabled = true;
+  label(speechStatus, 'Releasing model memory…');
+  try {
+    await conversationQueue;
+    await replyQueue;
+    const response = await fetch('/models/release', {method:'POST'});
+    if (!response.ok) throw Error(await response.text());
+    label(speechStatus, 'Model memory released. Saved chats are still available.');
+  } catch (error) {
+    label(speechStatus, error.message);
+  } finally {
+    releasingModels = false;
+    live.disabled = wake.disabled = speech.disabled = voicePreview.disabled = submit.disabled = false;
+  }
+};
+window.addEventListener('pagehide', () => stopListening('麦克风已关闭'));
+document.querySelector('#chat-form').onsubmit = event => {
+  event.preventDefault();
+  if (releasingModels) return;
+  unlockAudio();
+  converse(input.value);
+  input.value = '';
+};
+for (const button of document.querySelectorAll('.suggestions button[data-command]:not(#voice-preview)')) {
+  button.onclick = () => { unlockAudio(); return converse(translate(button.dataset.command)); };
+}
+renderTopic();
+for (const item of history.slice(-80)) say(inRoom && item.role === 'assistant' ? item.speaker + ': ' + parseReply(item.text, item.speaker, true).text : item.text, item.role === 'user', item.role === 'user' || !translations[item.text]);
+const returning = localStorage.getItem(topicStorageKey);
+if (!inRoom) say(returning ? reply('我回来了') : 'Hi. Want to leave something for tomorrow?');
+saveMember();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
