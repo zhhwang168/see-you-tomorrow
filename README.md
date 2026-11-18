@@ -10,7 +10,15 @@ See You Tomorrow is a local AI family chat app for Windows. Talk privately with 
 - **Expressions and replay.** The portrait follows the speaker and the expression selected for that reply. **Play reply** replays audio during the current page session.
 - **Saved records.** Private chats and room chats have separate histories. In a private chat, **Remember a topic** saves a topic for a future greeting. **Export history** downloads the current chat's saved text as JSON.
 
-## Windows setup
+## Quick setup on Windows
+
+Download and extract the repository ZIP. Double-click **Setup See You Tomorrow.cmd**. It checks Node.js, Python 3.12, and Ollama, uses Windows Package Manager for missing apps, installs the local speech dependencies, downloads Qwen, and opens the app. Windows may ask you to approve installations. Keep the setup window open and allow several minutes and several gigabytes for the first run.
+
+The first voice request downloads Kokoro model and voice files. Chrome may separately ask you to install its English recognition pack and grant microphone access. On later visits, use **Start See You Tomorrow.cmd**. Keep Ollama running for chat.
+
+If WinGet is unavailable or setup stops, use the manual steps below.
+
+## Manual Windows setup
 
 ### 1. Start the chat model
 
@@ -63,7 +71,7 @@ The project includes generated fictional portraits. The conversation history is 
 
 ## Data and privacy
 
-The default Windows data directory is `C:\GitHub\output\See You Tomorrow`. To choose a different directory, set it before starting the server:
+New installations use `%LOCALAPPDATA%\See You Tomorrow`. If the earlier `C:\GitHub\output\See You Tomorrow` folder already exists, the app continues using it. To choose a different directory, set it before starting the server:
 
 ```powershell
 $env:MIRA_DATA_DIR = Join-Path $env:LOCALAPPDATA 'See You Tomorrow'
@@ -79,8 +87,14 @@ The source distribution contains the app and generated portrait assets. It has n
 - **Page doesn’t open.** Run the launcher and visit [the local URL](http://127.0.0.1:3081/). Opening the HTML file directly needs the running server.
 - **Qwen can’t reply.** Check that Ollama is running and `ollama list` shows `qwen3:4b-instruct`. Use `ollama ps` during a reply to see model placement.
 - **Text appears without audio.** Check that narration is on, reply in English, and try **Play reply**. If no playback button appears, check the app terminal for Kokoro startup or synthesis errors.
-- **Microphone unavailable.** Use a browser with on-device speech recognition, install the English language pack if prompted, and allow microphone access. Keyboard input still works.
+- **Microphone unavailable.** Open the local URL directly in Google Chrome. The app checks several on-device English recognition packs. If Chrome offers an English pack, install it and allow microphone access. Keyboard input still works.
 
 ## Upstream projects
 
 [Ollama](https://ollama.com/) · [Qwen3](https://ollama.com/library/qwen3:4b-instruct) · [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) · [ArtificialGirlfriend](https://github.com/ARP224/ArtificialGirlfriend) (local voice workflow reference)
+
+
+
+
+If your browser cannot use an offline English recognition pack, click **Record voice message**, speak, then click **Send recording**. The app transcribes the recording locally with faster-whisper (CPU, English). The first use downloads its base.en model. Manual installs can add it with `.\.kokoro\Scripts\python.exe -m pip install faster-whisper==1.2.1 av==16.0.1`. Recordings are processed in memory.
+

@@ -1,13 +1,18 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const address = 'http://127.0.0.1:3081';
 const model = 'qwen3:4b-instruct';
-const dataRoot = process.env.MIRA_DATA_DIR || 'C:/GitHub/output/See You Tomorrow';
+const existingDataRoot = 'C:/GitHub/output/See You Tomorrow';
+const dataRoot = process.env.MIRA_DATA_DIR || (existsSync(existingDataRoot)
+  ? existingDataRoot
+  : join(process.env.LOCALAPPDATA || homedir(), 'See You Tomorrow'));
 const members = new Map([['mira','Mira'],['nora','Nora'],['room','Rooms']]);
 
 async function memberData(request, response, id) {
@@ -201,6 +206,33 @@ async function releaseModels(request, response) {
   }
 }
 
+async function transcribe(request, response) {
+  const type = request.headers['content-type']?.split(';')[0];
+  if (request.headers.origin !== address || !['audio/webm','audio/ogg','audio/mp4','audio/wav'].includes(type)) {
+    return response.writeHead(403).end();
+  }
+  try {
+    const chunks = [];
+    let bytes = 0;
+    for await (const chunk of request) {
+      bytes += chunk.length;
+      if (bytes > 2_000_000) return response.writeHead(413).end('Recording is too large.');
+      chunks.push(chunk);
+    }
+    await ensureSpeech();
+    const upstream = await fetch(kokoroAddress + '/transcribe', {
+      method:'POST', headers:{'Content-Type':type}, body:Buffer.concat(chunks),
+      signal:AbortSignal.timeout(120000)
+    });
+    if (!upstream.ok) throw Error('Whisper could not transcribe this recording.');
+    const data = await upstream.text();
+    response.writeHead(200, {'Content-Type':'application/json','Cache-Control':'no-store'}).end(data);
+  } catch (error) {
+    console.error('Transcription failed:', error.message);
+    response.writeHead(503).end('Local transcription failed. Run Setup again or check the app console.');
+  }
+}
+
 async function speech(request, response) {
   if (request.headers.origin !== address || request.headers['content-type'] !== 'application/json') {
     return response.writeHead(403).end();
@@ -238,6 +270,7 @@ async function speech(request, response) {
 createServer(async (request, response) => {
   if (request.headers.host !== '127.0.0.1:3081') return response.writeHead(404).end();
   if (request.method === 'POST' && request.url === '/models/release') return releaseModels(request, response);
+  if (request.method === 'POST' && request.url === '/transcribe') return transcribe(request, response);
   if (request.method === 'POST' && request.url === '/speech') return speech(request, response);
   if (request.method === 'POST' && request.url === '/chat') return chat(request, response);
   const memberMatch = /^\/members\/(mira|nora|room)$/.exec(request.url);
@@ -251,6 +284,7 @@ createServer(async (request, response) => {
     response.writeHead(500).end('Local asset could not be read.');
   }
 }).listen(3081, '127.0.0.1', () => console.log(address));
+
 
 
 

@@ -18,6 +18,8 @@ VOICES = {
 device = os.environ.get("MIRA_TTS_DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
 model = KModel(repo_id="hexgrad/Kokoro-82M").to(device).eval()
 inference_lock = Lock()
+transcription_lock = Lock()
+whisper_model = None
 pipelines = {lang: KPipeline(lang_code=lang, model=model) for lang in set(VOICES.values())}
 
 
@@ -33,7 +35,34 @@ class SpeechHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"kokoro")
 
+    def transcribe(self):
+        global whisper_model
+        try:
+            size = int(self.headers.get("Content-Length", 0))
+            if not 0 < size <= 2_000_000:
+                self.send_error(413)
+                return
+            audio = self.rfile.read(size)
+            with transcription_lock:
+                if whisper_model is None:
+                    from faster_whisper import WhisperModel
+                    whisper_model = WhisperModel("base.en", device="cpu", compute_type="int8")
+                segments, _ = whisper_model.transcribe(io.BytesIO(audio), language="en", beam_size=1, vad_filter=True)
+                payload = json.dumps({"text": " ".join(segment.text.strip() for segment in segments)}).encode()
+        except Exception as error:
+            print(f"Whisper transcription failed: {error}", flush=True)
+            self.send_error(503)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_POST(self):
+        if self.path == "/transcribe" and self.headers.get("Content-Type", "").split(";")[0] in {"audio/webm", "audio/ogg", "audio/mp4", "audio/wav"}:
+            self.transcribe()
+            return
         if self.path != "/speech":
             self.send_error(404)
             return

@@ -81,7 +81,9 @@ summary{cursor:pointer;color:#ead9fa}
 <span id="speech-status" role="status"></span>
 <button id="wake" type="button" aria-pressed="false">开启 Hey Mira 唤醒</button>
 <button id="live" type="button" aria-pressed="false">开始实时对话</button>
+<button id="record-voice" type="button">Record voice message</button>
 <span id="wake-status" role="status"></span>
+<span id="record-status" role="status"></span>
 <div id="messages" role="log" aria-label="对话记录"></div>
 <div class="suggestions"><button type="button">我回来了</button><button type="button">忘掉上次的事</button><button type="button">记住一件事</button></div>
 <form id="chat-form"><input aria-label="消息" placeholder="给 Mira 发消息" maxlength="300" required><button>发送</button></form>
@@ -977,12 +979,78 @@ async function answerTurn(text, userBubble, speaker = member, previous, invited 
   }
 }
 
+const recordVoice = document.querySelector('#record-voice');
+const recordStatus = document.querySelector('#record-status');
+let voiceRecorder;
+recordVoice.onclick = async () => {
+  if (voiceRecorder?.state === 'recording') {
+    voiceRecorder.stop();
+    return;
+  }
+  unlockAudio();
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    recordStatus.textContent = 'This browser cannot record audio. Try Chrome or Edge.';
+    return;
+  }
+  if (listener) stopListening('麦克风已关闭');
+  recordVoice.disabled = true;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true}});
+    const recorder = new MediaRecorder(stream);
+    voiceRecorder = recorder;
+    const chunks = [];
+    recorder.ondataavailable = event => {if (event.data.size) chunks.push(event.data);};
+    const limit = setTimeout(() => {if (recorder.state === 'recording') recorder.stop();}, 20000);
+    recorder.onstop = async () => {
+      clearTimeout(limit);
+      stream.getTracks().forEach(track => track.stop());
+      voiceRecorder = undefined;
+      recordVoice.disabled = true;
+      recordVoice.textContent = 'Record voice message';
+      recordStatus.textContent = 'Transcribing locally…';
+      try {
+        const audio = new Blob(chunks, {type:recorder.mimeType});
+        const response = await fetch('/transcribe', {method:'POST', body:audio});
+        if (!response.ok) throw Error(await response.text());
+        const {text} = await response.json();
+        recordStatus.textContent = text.trim() ? '' : 'No speech detected. Try a short sentence.';
+        if (text.trim()) converse(text);
+      } catch (error) {
+        recordStatus.textContent = error.message;
+      } finally {
+        recordVoice.disabled = false;
+      }
+    };
+    recorder.start();
+    recordVoice.textContent = 'Send recording';
+    recordStatus.textContent = 'Recording. Speak, then click Send recording.';
+    recordVoice.disabled = false;
+  } catch (error) {
+    stream?.getTracks().forEach(track => track.stop());
+    recordStatus.textContent = error.message;
+    recordVoice.disabled = false;
+  }
+};
 const wake = document.querySelector('#wake');
 const live = document.querySelector('#live');
 let liveMode = false;
 const wakeStatus = document.querySelector('#wake-status');
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const languageOptions = { langs: ['en-US'], processLocally: true };
+async function findLocalEnglish(recognition, onDownload) {
+  const downloadable = [];
+  for (const lang of ['en-US', 'en-GB', 'en-AU', 'en-CA']) {
+    const options = {langs:[lang], processLocally:true};
+    const status = await recognition.available(options);
+    if (status === 'available') return lang;
+    if (status === 'downloadable' || status === 'downloading') downloadable.push(options);
+  }
+  for (const options of downloadable) {
+    onDownload();
+    if (await recognition.install(options).catch(() => false)) return options.langs[0];
+  }
+  return null;
+}
 let listener;
 
 function stopListening(message) {
@@ -1013,13 +1081,11 @@ async function startListening(handsFree) {
     const recognizer = new Recognition();
     if (!('processLocally' in recognizer)) throw new Error('此浏览器无法在本机识别。');
     label(wakeStatus, '正在检查英文识别语言包…');
-    const availability = await Recognition.available(languageOptions);
-    if (availability !== 'available') {
-      if (availability === 'unavailable') throw new Error('此浏览器无法安装本机英文识别语言包。');
+    const language = await findLocalEnglish(Recognition, () => {
       label(wakeStatus, '正在安装英文识别语言包…');
-      if (!await Recognition.install(languageOptions)) throw new Error('语言包安装失败，请重试。');
-    }
-    recognizer.lang = 'en-US';
+    });
+    if (!language) throw Error('Offline English speech recognition is unavailable here. Open http://127.0.0.1:3081/ directly in Google Chrome, or use Record voice message for local Whisper.');
+    recognizer.lang = language;
     recognizer.processLocally = true;
     recognizer.continuous = !handsFree;
     let responding = false;
