@@ -1,4 +1,6 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const address = 'http://127.0.0.1:3081/';
@@ -14,10 +16,34 @@ async function appIsReady() {
 }
 
 function openBrowser() {
-  console.log('Open ' + address + ' in your browser.');
+  console.log('Open ' + address + ' in Google Chrome for live conversation.');
   if (process.argv.includes('--no-browser')) return;
-  const browser = spawn('cmd.exe', ['/d', '/c', 'start', '', address], { windowsHide: true });
-  browser.on('error', () => console.log('Open the address above manually.'));
+  const openDefaultBrowser = () => {
+    console.log('Using the default browser. If live conversation is unavailable, open the address in Google Chrome or use Record voice message.');
+    const browser = spawn('cmd.exe', ['/d', '/c', 'start', '', address], {
+      windowsHide: true, detached: true, stdio: 'ignore'
+    });
+    browser.once('error', () => console.log('Open the address above manually.'));
+    browser.unref();
+  };
+  const chrome = [process.env.LOCALAPPDATA, process.env.ProgramFiles, process.env['ProgramFiles(x86)']]
+    .filter(Boolean)
+    .map(root => join(root, 'Google', 'Chrome', 'Application', 'chrome.exe'))
+    .find(path => existsSync(path));
+  if (!chrome) {
+    console.log('Google Chrome was not found in the standard installation folders.');
+    openDefaultBrowser();
+    return;
+  }
+  console.log('Opening Google Chrome…');
+  const browser = spawn(chrome, [address], {
+    windowsHide: true, detached: true, stdio: 'ignore'
+  });
+  browser.once('error', () => {
+    console.log('Could not open Google Chrome.');
+    openDefaultBrowser();
+  });
+  browser.unref();
 }
 
 if (await appIsReady()) {

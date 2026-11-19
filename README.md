@@ -43,7 +43,7 @@ The CUDA build above is for NVIDIA GPUs. To install CPU-only PyTorch, replace it
 
 ### 3. Launch
 
-Double-click **Start See You Tomorrow.cmd**, or start the launcher from PowerShell:
+Double-click **Start See You Tomorrow.cmd**, or start the launcher from PowerShell. The launcher prefers Google Chrome for hands-free speech recognition, even if another browser such as Avast is your Windows default. It checks the standard per-user, 64-bit, and 32-bit Chrome installation folders. If Chrome is unavailable or cannot start, it opens your default browser and prints guidance for voice input. This does not change your Windows default browser.
 
 ```powershell
 node launcher.mjs
