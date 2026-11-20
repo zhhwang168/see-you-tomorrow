@@ -1,0 +1,4 @@
+name = "see-you-tomorrow"
+pages_build_output_dir = "./website"
+compatibility_date = "2026-11-20"
+send_metrics = false

@@ -13,6 +13,10 @@ No accounts, analytics, third-party embeds, or microphone access are used here.
 - Build command: leave empty
 - Build output directory: `website`
 
+The repository-root `wrangler.toml` pins the output directory to `./website`,
+so Git-connected builds deploy the showcase rather than the local app HTML.
+Treat this checked-in configuration as the source of truth.
+
 Publish only this directory. The Node server and Python speech service belong
 to the local app, not to the website deployment. All web assets are local files,
 and the showcase MP4 is below Cloudflare Pages' 25 MiB per-file limit.
