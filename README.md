@@ -2,6 +2,13 @@
 
 See You Tomorrow is a local AI family chat app for Windows. Talk privately with Mira or Nora, or invite them into a shared room. Each member has a separate profile, signature voice, and expression set. The app displays the conversation as text and can read English replies aloud.
 
+## Recorded showcase website
+
+The [`website/`](website/) folder contains a static showcase with a one-minute
+recorded demo, chapter selection, transcript, sample prompts and setup links.
+It shows the app in action; live AI conversations run in the local Windows app.
+See [website deployment instructions](website/README.md) for Cloudflare Pages.
+
 ## What you can do
 
 - **Private chats.** Edit each member's name, relationship, personality, and Kokoro voice in **Member settings**.
