@@ -2,13 +2,6 @@
 
 See You Tomorrow is a local AI family chat app for Windows. Talk privately with Mira or Nora, or invite them into a shared room. Each member has a separate profile, signature voice, and expression set. The app displays the conversation as text and can read English replies aloud.
 
-## Recorded showcase website
-
-The [`website/`](website/) folder contains a static showcase with a one-minute
-recorded demo, chapter selection, transcript, sample prompts and setup links.
-It shows the app in action; live AI conversations run in the local Windows app.
-See [website deployment instructions](website/README.md) for Cloudflare Pages.
-
 ## What you can do
 
 - **Private chats.** Edit each member's name, relationship, personality, and Kokoro voice in **Member settings**.
@@ -104,4 +97,3 @@ The source distribution contains the app and generated portrait assets. It has n
 
 
 If your browser cannot use an offline English recognition pack, click **Record voice message**, speak, then click **Send recording**. The app transcribes the recording locally with faster-whisper (CPU, English). The first use downloads its base.en model. Manual installs can add it with `.\.kokoro\Scripts\python.exe -m pip install faster-whisper==1.2.1 av==16.0.1`. Recordings are processed in memory.
-
